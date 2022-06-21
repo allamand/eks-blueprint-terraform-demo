@@ -1,5 +1,6 @@
 locals {
-  name            = basename(path.cwd)
+  name            = seb
+  #name            = basename(path.cwd)  
   region          = data.aws_region.current.name
   cluster_version = "1.21"
   #terraform_version = "Terraform v1.0.1"
