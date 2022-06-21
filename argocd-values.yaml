@@ -1,0 +1,4 @@
+# see : https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml#L1088
+server:
+  service:
+    type: LoadBalancer
