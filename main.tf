@@ -39,7 +39,7 @@ provider "kubectl" {
 }
 
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.0.7"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.2.1"
 
   cluster_name    = local.name
 
@@ -50,11 +50,19 @@ module "eks_blueprints" {
   # EKS CONTROL PLANE VARIABLES
   cluster_version = local.cluster_version
 
+  # List of map_roles
+  map_roles          = [
+    {
+      rolearn  ="arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/demo3"     # The ARN of the IAM role
+      username = "ops-role"                                           # The user name within Kubernetes to map to the IAM role
+      groups   = ["system:masters"]                                   # A list of groups within Kubernetes to which the role is mapped; Checkout K8s Role and Rolebindings
+    }
+  ]
 
   # EKS MANAGED NODE GROUPS
   managed_node_groups = {
     mg_5 = {
-      node_group_name = "managed-ondemand"
+      node_group_name = local.node_group_name
       instance_types  = ["m5.xlarge"]
       subnet_ids      = module.vpc.private_subnets
     }
@@ -161,7 +169,7 @@ module "vpc" {
 }
 
 module "aws_controllers" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.0.7/modules/kubernetes-addons"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.2.1/modules/kubernetes-addons"
 
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
@@ -175,14 +183,14 @@ module "aws_controllers" {
   enable_aws_for_fluentbit            = false
 
   #depends_on = [module.eks_blueprints.managed_node_groups,module.kubernetes-addons]
-  depends_on = [module.eks_blueprints.managed_node_groups]
+  #depends_on = [module.eks_blueprints.managed_node_groups]
 }
 
 
 # Add the following to the bottom of main.tf
 
 module "kubernetes-addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.0.7/modules/kubernetes-addons"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.2.1/modules/kubernetes-addons"
 
   eks_cluster_id = module.eks_blueprints.eks_cluster_id
 
@@ -221,5 +229,135 @@ module "kubernetes-addons" {
   enable_argo_rollouts                = false
 
   #depends_on = [module.eks_blueprints.managed_node_groups,module.aws_controllers]
-  depends_on = [module.eks_blueprints.managed_node_groups]
+  #depends_on = [module.eks_blueprints.managed_node_groups]
+}
+
+# -----------
+# Karpenter
+# -----------
+
+# resource "aws_iam_instance_profile" "karpenter" {
+#   name = "karpenter"
+#   role = aws_iam_role.role.name
+# }
+
+# resource "aws_iam_role" "role" {
+#   name = "karpenter"
+#   path = "/"
+
+#   assume_role_policy = <<EOF
+# {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Action": "sts:AssumeRole",
+#             "Principal": {
+#                "Service": "ec2.amazonaws.com"
+#             },
+#             "Effect": "Allow",
+#             "Sid": ""
+#         }
+#     ]
+# }
+# EOF
+# }
+
+# resource "aws_iam_role_policy" "karpenter_policy" {
+#   name = "test_policy"
+#   role = aws_iam_role.test_role.id
+
+#   # Terraform's "jsonencode" function converts a
+#   # Terraform expression result to valid JSON syntax.
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = [
+#           "ec2:Describe*",
+#         ]
+#         Effect   = "Allow"
+#         Resource = "*"
+#       },
+#     ]
+#   })
+# }
+
+# Creates Launch templates for Karpenter
+# Launch template outputs will be used in Karpenter Provisioners yaml files. Checkout this examples/karpenter/provisioners/default_provisioner_with_launch_templates.yaml
+# module "karpenter_launch_templates" {
+#   source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.2.1/modules/launch-templates"
+
+#   eks_cluster_id = module.eks_blueprints.eks_cluster_id
+
+#   launch_template_config = {
+#     linux = {
+#       ami                    = data.aws_ami.eks.id
+#       launch_template_prefix = "karpenter"
+#       iam_instance_profile   = module.eks_blueprints.managed_node_group_iam_instance_profile_id[0]
+#       vpc_security_group_ids = [module.eks_blueprints.worker_node_security_group_id]
+#       block_device_mappings = [
+#         {
+#           device_name = "/dev/xvda"
+#           volume_type = "gp3"
+#           volume_size = 200
+#         }
+#       ]
+#     }
+
+#     bottlerocket = {
+#       ami                    = data.aws_ami.bottlerocket.id
+#       launch_template_os     = "bottlerocket"
+#       launch_template_prefix = "bottle"
+#       iam_instance_profile   = module.eks_blueprints.managed_node_group_iam_instance_profile_id[0]
+#       vpc_security_group_ids = [module.eks_blueprints.worker_node_security_group_id]
+#       block_device_mappings = [
+#         {
+#           device_name = "/dev/xvda"
+#           volume_type = "gp3"
+#           volume_size = 200
+#         }
+#       ]
+#     }
+#   }
+
+#  tags = merge(local.tags, { Name = "karpenter" })
+#}
+
+
+data "aws_ami" "eks" {
+  owners      = ["amazon"]
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["amazon-eks-node-${module.eks_blueprints.eks_cluster_version}-*"]
+  }
+}
+
+data "aws_ami" "bottlerocket" {
+  owners      = ["amazon"]
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["bottlerocket-aws-k8s-${module.eks_blueprints.eks_cluster_version}-x86_64-*"]
+  }
+}
+
+data "kubectl_path_documents" "karpenter_provisioners" {
+  pattern = "${path.module}/karpenter-provisioner.yaml"
+  #pattern = "${path.module}/provisioners/*.yaml"
+  vars = {
+    azs                     = join(",", local.azs)
+    iam-instance-profile-id = "${local.name}-${local.node_group_name}"
+    eks-cluster-id          = local.name
+    eks-vpc_name            = local.name
+  }
+}
+
+resource "kubectl_manifest" "karpenter_provisioner" {
+ for_each  = toset(data.kubectl_path_documents.karpenter_provisioners.documents)
+ yaml_body = each.value
+
+ #depends_on = [module.aws_controllers]
 }

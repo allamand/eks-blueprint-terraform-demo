@@ -1,6 +1,5 @@
 locals {
-  name            = seb
-  #name            = basename(path.cwd)  
+  name            = basename(path.cwd)
   region          = data.aws_region.current.name
   cluster_version = "1.21"
   #terraform_version = "Terraform v1.0.1"
@@ -8,6 +7,7 @@ locals {
   vpc_cidr      = "10.0.0.0/16"
   azs           = slice(data.aws_availability_zones.available.names, 0, 3)
 
+  node_group_name = "managed-ondemand"
 
   #---------------------------------------------------------------
   # ARGOCD ADD-ON APPLICATION
