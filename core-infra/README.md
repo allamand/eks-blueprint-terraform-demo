@@ -1,5 +1,21 @@
 # Core Infrastructure
 
+## Table of content
+
+- [Core Infrastructure](#core-infrastructure)
+  - [Table of content](#table-of-content)
+  - [Getting Started](#getting-started)
+  - [Usage](#usage)
+  - [Outputs](#outputs)
+  - [Cleanup](#cleanup)
+- [Terraform Doc](#terraform-doc)
+  - [Requirements](#requirements)
+  - [Providers](#providers)
+  - [Modules](#modules)
+  - [Resources](#resources)
+  - [Inputs](#inputs)
+  - [Outputs](#outputs-1)
+
 This folder contains the Terraform code to deploy the core infratructure for our EKS Cluster Blue and EKS Cluster Green. The AWS resources created by the script are:
 
 - Networking
@@ -58,6 +74,8 @@ Run the following command if you want to delete all the resources created before
 ```shell
 terraform destroy
 ```
+
+# Terraform Doc
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements

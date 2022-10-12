@@ -4,6 +4,28 @@ We are going to uses this repository to show how to leverage blue/green applicat
 
 We are working with the accompagning GitHup repository for our GitOps workloads in https://github.com/seb-demo/eks-blueprints-workloads
 
+## Table of content
+
+- [EKS Blueprint for Terraform - Sample for blue/green cluster migration](#eks-blueprint-for-terraform---sample-for-bluegreen-cluster-migration)
+  - [Table of content](#table-of-content)
+  - [Prerequisites](#prerequisites)
+  - [Quick Start](#quick-start)
+    - [Configure the Stacks](#configure-the-stacks)
+    - [Create the core stack](#create-the-core-stack)
+    - [Create the Blue cluster](#create-the-blue-cluster)
+    - [Create the Green cluster](#create-the-green-cluster)
+  - [See our Workload: focus on team-burnham deployment.](#see-our-workload-focus-on-team-burnham-deployment)
+  - [Using AWS Route53 and External DNS](#using-aws-route53-and-external-dns)
+    - [Configure Ingress ressources with weighted records](#configure-ingress-ressources-with-weighted-records)
+    - [Automate the migration from Terraform](#automate-the-migration-from-terraform)
+  - [Delete the Stack](#delete-the-stack)
+    - [Delete the EKS Cluster(s)](#delete-the-eks-clusters)
+    - [Delete the core infra stack](#delete-the-core-infra-stack)
+  - [Troubleshoot](#troubleshoot)
+    - [External DNS Ownership](#external-dns-ownership)
+    - [Check Route 53 Record status](#check-route-53-record-status)
+    - [Check current resolution and TTL value](#check-current-resolution-and-ttl-value)
+
 ## Prerequisites
 
 - You can use [AWS Cloud9](https://aws.amazon.com/cloud9/) which has all the prerequisites preinstalled and skip to [Quick Start](#quick-start)
