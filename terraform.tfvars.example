@@ -11,5 +11,6 @@ vpc_tag_value = "eks-blueprint" # default to $core_stack_name
 
 addons_repo_url = "https://github.com/aws-samples/eks-blueprints-add-ons.git"
 
-workload_repo_url = "https://github.com/seb-demo/eks-blueprints-workloads.git"
-workload_repo_path = "envs/dev"
+workload_repo_url      = "https://github.com/seb-tmp/eks-blueprints-workloads.git"
+workload_repo_revision = "blue-green-demo"
+workload_repo_path     = "envs/dev"

@@ -6,3 +6,6 @@ kube-config.yaml
 .envrc
 terraform.tfvars
 .vscode
+curl
+eks-nodomain
+
