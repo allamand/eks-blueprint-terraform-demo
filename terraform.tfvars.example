@@ -1,0 +1,15 @@
+# You should update the below variables
+
+aws_region          = "eu-west-1"
+core_stack_name     = "eks-blueprint"
+hosted_zone_name    = "eks.mydomain.org" # your Existing Hosted Zone
+eks_admin_role_name = "demo3" # Additional role admin in the cluster (usually the role I use in the AWS console)
+
+To use other existing VPC reference it's tags
+vpc_tag_key   = "Blueprint"
+vpc_tag_value = "eks-blueprint" # default to $core_stack_name
+
+addons_repo_url = "https://github.com/aws-samples/eks-blueprints-add-ons.git"
+
+workload_repo_url = "https://github.com/seb-demo/eks-blueprints-workloads.git"
+workload_repo_path = "envs/dev"

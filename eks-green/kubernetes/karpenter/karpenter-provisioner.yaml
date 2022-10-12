@@ -1,0 +1,34 @@
+# apiVersion: karpenter.sh/v1alpha5
+# kind: Provisioner
+# metadata:
+#   name: burnham
+
+# spec:
+#   requirements:
+#     # - key: 'node.kubernetes.io/instance-type'
+#     #   operator: In
+#     #   values: ['m5.xlarge', 'm5a.xlarge', 'm5ad.xlarge', 'm5d.xlarge', 't2.xlarge', 't3.xlarge', 't3a.xlarge']
+#     - key: 'kubernetes.io/arch'
+#       operator: In
+#       values: ['amd64']
+#     - key: karpenter.sh/capacity-type
+#       operator: In
+#       values: ['on-demand', 'spot']
+#   providerRef:
+#     name: karpenter-bottlerocket
+#     #name: karpenter-default
+#     tags:
+#       karpenter.sh/cluster_name: ${eks-cluster-id}
+#       karpenter.sh/provisioner: default
+#   ttlSecondsAfterEmpty: 60
+#   limits:
+#     resources:
+#       cpu: '200'
+#   labels:
+#     billing-team: default
+#     team: default
+#     type: karpenter
+#   taints:
+#     - key: karpenter
+#       value: 'true'
+#       effect: NoSchedule

@@ -1,0 +1,9 @@
+provider: aws
+txtOwnerId: ${txtOwnerId}
+zoneIdFilters: ${zoneIdFilters}
+policy: ${policy}
+loglevel: ${loglevel}
+aws:
+  region: ${aws_region}
+  zoneType: ${zoneType}
+  zonesCacheDuration: ${zonesCacheDuration}
