@@ -4,7 +4,7 @@ We are going to uses this repository to show how to leverage blue/green applicat
 
 We are working with the accompagning GitHup repository for our GitOps workloads in https://github.com/aws-samples/eks-blueprints-workloads
 
-> **Note**: Currently we need this [PR](https://github.com/aws-samples/eks-blueprints-workloads/pull/22) to be merged for this demo. in the meantime, we configured the `terraform.tfvars.example` to use the soruce of this PR repo so that the example will work. 
+> **Note**: Currently we need this [PR](https://github.com/aws-samples/eks-blueprints-workloads/pull/22) to be merged for this demo. in the meantime, we configured the `terraform.tfvars.example` to use the soruce of this PR repo so that the example will work.
 
 
 See the Architecture of what we are building
@@ -178,7 +178,7 @@ eks-blueprint-blue
 
 We have configured both our clusters to configure the same [Amazon Route 53](https://aws.amazon.com/fr/route53/) Hosted Zones. This is done by having the same configuration of [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) add-on in `main.tf`:
 
-> **Note:** In order to work, we need the [PR 1035](https://github.com/aws-ia/terraform-aws-eks-blueprints/pull/1035) to be merged 
+> **Note:**: In order to work, we need the [PR 1035](https://github.com/aws-ia/terraform-aws-eks-blueprints/pull/1035) to be merged
 
 This is the Terraform configuration to configure ExternalDNS Add-on (it will be deployed with ArgoCD)
 

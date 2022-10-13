@@ -135,7 +135,7 @@ See Cleanup section in main Readme.md
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_eks_blueprints"></a> [eks\_blueprints](#module\_eks\_blueprints) | github.com/aws-ia/terraform-aws-eks-blueprints | v4.8.0 |
-| <a name="module_kubernetes_addons"></a> [kubernetes\_addons](#module\_kubernetes\_addons) | /home/ubuntu/environment/eks/terraform/terraform-aws-eks-blueprints/modules/kubernetes-addons | n/a |
+| <a name="module_kubernetes_addons"></a> [kubernetes\_addons](#module\_kubernetes\_addons) | github.com/allamand/terraform-aws-eks-blueprints | external-dns-argo-values/modules/kubernetes-addons |
 
 ## Resources
 

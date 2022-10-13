@@ -213,7 +213,7 @@ module "eks_blueprints" {
 
 module "kubernetes_addons" {
   #source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.8.0/modules/kubernetes-addons"
-  source             = "/home/ubuntu/environment/eks/terraform/terraform-aws-eks-blueprints/modules/kubernetes-addons"
+  source             = "github.com/allamand/terraform-aws-eks-blueprints?ref=external-dns-argo-values/modules/kubernetes-addons"
   eks_cluster_id     = module.eks_blueprints.eks_cluster_id
   eks_cluster_domain = local.eks_cluster_domain
 
