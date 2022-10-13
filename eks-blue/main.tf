@@ -264,12 +264,17 @@ module "kubernetes_addons" {
   enable_external_dns = true
 
   external_dns_helm_config = {
-    txtOwnerId         = local.name
-    zoneIdFilter       = data.aws_route53_zone.sub.zone_id
-    policy             = "sync"
-    awszoneType        = "public"
-    zonesCacheDuration = "1h"
-    logLevel           = "debug"
+    txtOwnerId   = local.name
+    zoneIdFilter = data.aws_route53_zone.sub.zone_id # Note: this uses GitOpsBridge
+    policy       = "sync"
+
+    #I'm not able to configured additional level values -> Error: Inconsistent conditional result types
+    # aws = {
+    #   zoneType        = "public"
+    #   zonesCacheDuration = "1h"
+    # }
+
+    logLevel = "debug"
   }
 
 }

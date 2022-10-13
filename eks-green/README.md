@@ -112,6 +112,7 @@ curl -s $URL | grep CLUSTER_NAME | awk -F "<span>|</span>" '{print $4}'
 See Cleanup section in main Readme.md
 
 # Terraform Doc
+
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
