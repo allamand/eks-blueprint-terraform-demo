@@ -2,7 +2,16 @@
 
 We are going to uses this repository to show how to leverage blue/green application migration between EKS Blueprint clusters, based on Amazon Route53 weitghed records with LoadBalancer Contreoller and External DNS.
 
-We are working with the accompagning GitHup repository for our GitOps workloads in https://github.com/seb-demo/eks-blueprints-workloads
+We are working with the accompagning GitHup repository for our GitOps workloads in https://github.com/aws-samples/eks-blueprints-workloads
+
+> **Note**: Currently we need this [PR](https://github.com/aws-samples/eks-blueprints-workloads/pull/22) to be merged for this demo. in the meantime, we configured the `terraform.tfvars.example` to use the soruce of this PR repo so that the example will work. 
+
+
+See the Architecture of what we are building
+
+<p align="center">
+  <img src="static/archi-blue-green.png"/>
+</p>
 
 ## Table of content
 
@@ -105,7 +114,7 @@ sdiff -s eks-blue/locals.tf eks-green/locals.tf
 Our clusters are configured with existing ArgoCD Github repository that will be synchronized using ArgoCD into each of the clusters:
 
 - [EKS Blueprints Add-ons repository](https://github.com/aws-samples/eks-blueprints-add-ons)
-- [Workloads repository](https://github.com/seb-demo/eks-blueprints-workloads)
+- [Workloads repository](https://github.com/seb-tmp/eks-blueprints-workloads/tree/blue-green-demo)
 
 <p align="center">
   <img src="static/eks-argo.png"/>
@@ -114,7 +123,22 @@ Our clusters are configured with existing ArgoCD Github repository that will be 
 We are going to look after on of the application deployed from the workload repository as example to demonstrate our migration automation: the `Burnham` workload in the team-burnham namespace.
 We have set up a [simple go application](https://github.com/allamand/eks-example-go) than can respond in it's body the name of the cluster it is running on. With this it will be easy to see the current migration on our workload.
 
-The application is deployed from our [workload repository manifest](https://github.com/seb-demo/eks-blueprints-workloads/blob/blue-green/teams/team-burnham/dev/templates/burnham.yaml)
+```
+<head>
+  <title>Hello EKS Blueprint</title>
+</head>
+<div class="info">
+  <h>Hello EKS Blueprint Version 1.4</h>
+  <p><span>Server&nbsp;address:</span> <span>10.0.2.201:34120</span></p>
+  <p><span>Server&nbsp;name:</span> <span>burnham-9d686dc7b-dw45m</span></p>
+  <p class="smaller"><span>Date:</span> <span>2022.10.13 07:27:28</span></p>
+  <p class="smaller"><span>URI:</span> <span>/</span></p>
+  <p class="smaller"><span>HOST:</span> <span>burnham.eks-blueprint.mon-domain.com</span></p>
+  <p class="smaller"><span>CLUSTER_NAME:</span> <span>eks-blueprint-blue</span></p>
+</div>
+```
+
+The application is deployed from our [workload repository manifest](https://github.com/seb-tmp/eks-blueprints-workloads/blob/blue-green-demo/teams/team-burnham/dev/templates/burnham.yaml)
 
 See the deployment
 
@@ -154,9 +178,7 @@ eks-blueprint-blue
 
 We have configured both our clusters to configure the same [Amazon Route 53](https://aws.amazon.com/fr/route53/) Hosted Zones. This is done by having the same configuration of [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) add-on in `main.tf`:
 
-<p align="center">
-  <img src="static/archi-blue-green.png"/>
-</p>
+> **Note:** In order to work, we need the [PR 1035](https://github.com/aws-ia/terraform-aws-eks-blueprints/pull/1035) to be merged 
 
 This is the Terraform configuration to configure ExternalDNS Add-on (it will be deployed with ArgoCD)
 

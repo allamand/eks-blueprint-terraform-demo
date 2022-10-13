@@ -8,4 +8,3 @@ terraform.tfvars
 .vscode
 curl
 eks-nodomain
-
