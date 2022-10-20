@@ -1,11 +1,10 @@
 # EKS Blueprint for Terraform - Sample for blue/green cluster migration
 
-We are going to uses this repository to show how to leverage blue/green application migration between EKS Blueprint clusters, based on Amazon Route53 weitghed records with LoadBalancer Contreoller and External DNS.
+This directory provide a pattern based on [EKS Blueprint for Terraform](https://aws-ia.github.io/terraform-aws-eks-blueprints) that show how to leverage blue/green or canary application workload migration between EKS clusters, using [Amazon Route 53](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-weighted.html) weighted routing with [AWS LoadBalancer Controller](https://aws-ia.github.io/terraform-aws-eks-blueprints/v4.13.0/add-ons/aws-load-balancer-controller/) and [External DNS add-on](https://aws-ia.github.io/terraform-aws-eks-blueprints/v4.13.0/add-ons/external-dns/).
 
-We are working with the accompagning GitHup repository for our GitOps workloads in https://github.com/aws-samples/eks-blueprints-workloads
+We are leveraging [the existing EKS Blueprints Workloads GitHub repository](https://github.com/aws-samples/eks-blueprints-workloads) to deploy our GitOps [ArgoCD](https://aws-ia.github.io/terraform-aws-eks-blueprints/v4.13.0/add-ons/argocd/) workloads, which are defined as helm charts. We are leveraging [ArgoCD Apps of apps](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/) pattern where an ArgoCD Application can also reference other ArgoCD Applications.
 
 > **Note**: Currently we need this [PR](https://github.com/aws-samples/eks-blueprints-workloads/pull/22) to be merged for this demo. in the meantime, we configured the `terraform.tfvars.example` to use the soruce of this PR repo so that the example will work.
-
 
 See the Architecture of what we are building
 
@@ -37,39 +36,18 @@ See the Architecture of what we are building
 
 ## Prerequisites
 
-- You can use [AWS Cloud9](https://aws.amazon.com/cloud9/) which has all the prerequisites preinstalled and skip to [Quick Start](#quick-start)
-- Mac (tested with OS version 12.+) and AWS Cloud9 Linux machines. We have **not tested** with Windows machines
-- [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) (tested version v1.2.5 on darwin_amd64)
-- [Git](https://github.com/git-guides/install-git) (tested version 2.27.0)
+- [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) (tested version v1.2.9 on linux)
+- [Git](https://github.com/git-guides/install-git)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html#getting-started-install-instructions)
 - AWS test account with administrator role access
-- Configure the AWS credentials on your machine `~/.aws/credentials`. You need to use the following format:
-
-```shell
-[AWS_PROFILE_NAME]
-aws_access_key_id = Replace_with_the_correct_access_Key
-aws_secret_access_key = Replace_with_the_correct_secret_Key
-```
-
-- Export the AWS profile name
-
-```bash
-export AWS_PROFILE=your_profile_name
-```
-
-- You can also set the default region and output format in `~/.aws/config`. Something like:
-
-```shell
-[default]
-output = json
-region = us-west-2
-```
 
 ## Quick Start
 
 ### Configure the Stacks
 
-For working with this repository, you will need an existing Amazon Route 53 Hosted Zone, in which the blueprint will be able to create based on the `core_stack_name` (eks-blueprint) a dedicated Hosted Zone that will have the domain for our clusters.
+For working with this repository, you will need an existing [Amazon Route 53](https://docs.aws.amazon.com/route53/index.html) Hosted Zone, in which the blueprint will be able to create based on the `core_stack_name` parameter a dedicated Hosted Zone that will store the records for our workloads.
+
+Before moving to the next step, you will need to register a parent domain with [Amazon Route 53](https://docs.aws.amazon.com/route53/index.html) (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-register.html) in case you don’t have one created yet.
 
 You will need to provide the `hosted_zone_name` for example `my-example.com` and then the domain for your workloads will be on `${core_stack_name}.${hosted_zone_name}` so in our example `eks-blueprint.my-example.com`
 
@@ -79,9 +57,26 @@ First, copy the configuration file, and fill with appropriate values:
 cp terraform.tfvars.example terraform.tfvars
 ```
 
+Our sample is composed of three main directory:
+
+- _core-infra_ → this stack will create vpc and dependencies, create a Route53 sub zone for our sample, and a wildcard Certificate Manager certificate for our applications TLS endpoints, and a SecretManager password for the ArgoCD UIs.
+- _eks-blue_ → will create our Blue EKS blueprint cluster, with ArgoCD add-on which will automatically deploy additional add-ons and our demo workloads
+- _eks-green_ → same as blue, with some configuration differences (that can be newer Kubernetes version)
+
+So we are going to create 2 EKS clusters, sharing the same VPC, and each one of them will install locally our workloads from the central GitOps repository leveraging ArgoCD add-on.
+In the GitOps workload repository, we have configured our applications deployments to leverage AWS Load Balancers Controllers annotations, so that applications will be exposed on AWS Load Balancers, created from our Kubernetes manifests. We will have 1 load balancer per cluster for each of our applications.
+
+We have configured ExternalDNS add-ons in our two clusters to share the same Route53 Hosted Zone. The workloads in both clusters also share the same Route 53 DNS records, and we can either configure the eks-blue or eks-green to own the records, allowing us to do blue/green migration, or preferably we can rely on AWS Route53 weighted records to allow us to configure canary workload migration between our two clusters.
+
+Here we uses the same GitOps workload configuration and adapts parameters with the `values.yaml`, but we could also uses another ArgoCD repository, or uses a new directory if we want to validate or test new deployment manifests with maybe additional features or configurations or to use with different Kubernetes add-ons (like changing ingress controller).
+
+Our objective here is to show you how Application teams and Platform teams can configured the infrastructure so that application teams are able to deploy seamlessly their workloads to the EKS clusters thanks to ArgoCD, and platform team can keep the control of migrating production workflow from one cluster to another without having to synchronized operations with applications teams.
+
+> In this example we show how you can seamlessly migrate your stateless workloads between the 2 clusters for a blue/green or Canary migration, but you can also leverage the same architecture to have your workloads for example separated in different accounts or regions, for either High Availability or Lower latency Access from your customers.
+
 ### Create the core stack
 
-```
+```bash
 cd core-infra
 terraform init
 terraform apply
@@ -104,10 +99,6 @@ terraform apply
 ```
 
 By default the only differences in the 2 clusters are the values defined in `locals.tf`. We will change thoses values to for upgrade of clusters, and to migrate our stateless workloads between clusters.
-
-```
-sdiff -s eks-blue/locals.tf eks-green/locals.tf
-```
 
 ## See our Workload: focus on team-burnham deployment.
 
@@ -138,11 +129,11 @@ We have set up a [simple go application](https://github.com/allamand/eks-example
 </div>
 ```
 
-The application is deployed from our [workload repository manifest](https://github.com/seb-tmp/eks-blueprints-workloads/blob/blue-green-demo/teams/team-burnham/dev/templates/burnham.yaml)
+The application is deployed from our [<burnham> workload repository manifest](https://github.com/seb-tmp/eks-blueprints-workloads/blob/blue-green-demo/teams/team-burnham/dev/templates/burnham.yaml)
 
 See the deployment
 
-```
+```bash
 $ kubectl get deployment -n team-burnham -l app=burnham-deployment-devburnham
 NAME      READY   UP-TO-DATE   AVAILABLE   AGE
 burnham   3/3     3            3           3d18h
@@ -150,7 +141,7 @@ burnham   3/3     3            3           3d18h
 
 See the pods
 
-```
+```bash
 $ kubectl get pods -n team-burnham -l app=burnham
 NAME                       READY   STATUS    RESTARTS   AGE
 burnham-7db4c6fdbb-82hxn   1/1     Running   0          3d18h
@@ -160,7 +151,7 @@ burnham-7db4c6fdbb-hpq6h   1/1     Running   0          3d18h
 
 See the logs:
 
-```
+```bash
 $ kubectl logs -n team-burnham -l app=burnham
 2022/10/10 12:35:40 {url: / }, cluster: eks-blueprint-blue }
 2022/10/10 12:35:49 {url: / }, cluster: eks-blueprint-blue }
@@ -232,9 +223,9 @@ Amazon Route 53 weighted records works like this:
 
 ### Automate the migration from Terraform
 
-Now that we have setup our 2 clusters, deployed with ArgoCD and that the weighed records are set from values.yaml injected from Terraform, let's see how our Platform team can trigger the workload migration.
+Now that we have setup our 2 clusters, deployed with ArgoCD and that the weighed records from `values.yaml` are injected from Terraform, let's see how our Platform team can trigger the workload migration.
 
-1. At first, 100% of burnham traffic is set from the eks-blue cluster, this is controlled from the `locals.tf` with the parameter `route53_weight = "100"`. The same parameter is set to 0 in cluster eks-green.
+1. At first, 100% of burnham traffic is set to the **eks-blue** cluster, this is controlled from the `locals.tf` with the parameter `route53_weight = "100"`. The same parameter is set to 0 in cluster eks-green.
 
 <p align="center">
   <img src="static/burnham-records.png"/>
@@ -244,7 +235,7 @@ Now that we have setup our 2 clusters, deployed with ArgoCD and that the weighed
   <img src="static/archi-blue.png"/>
 </p>
 
-All requests to our endpoint should response with eks-blueprint-blue
+All requests to our endpoint should response with `eks-blueprint-blue` we can test it with the following command:
 
 ```
 $ URL=$(echo -n "https://" ; kubectl get ing -n team-burnham burnham-ingress -o json | jq ".spec.rules[0].host" -r)
@@ -252,7 +243,7 @@ $ curl -s $URL | grep CLUSTER_NAME | awk -F "<span>|</span>" '{print $4}'
 eks-blueprint-blue
 ```
 
-1. Let's start traffic goes to 50% eks-blue and 50% eks-green by activating also value 100 in eks-green locals.tf (`route53_weight = "100"`) and let's `terraform apply` to let terraform update the configuration
+2. Let's change traffic to 50% eks-blue and 50% eks-green by activating also value 100 in **eks-green** locals.tf (`route53_weight = "100"`) and let's `terraform apply` to let terraform update the configuration
 
 <p align="center">
   <img src="static/burnham-records2.png"/>
@@ -262,7 +253,7 @@ eks-blueprint-blue
   <img src="static/archi-blue-green.png"/>
 </p>
 
-All records have weithg of 100, so we will have 50% requests on each clusters.
+All records have weight of 100, so we will have 50% requests on each clusters.
 
 We can check the ratio of requests resolution between both clusters
 
@@ -271,9 +262,9 @@ URL=$(echo -n "https://" ; kubectl get ing -n team-burnham burnham-ingress -o js
 repeat 10 curl -s $URL | grep CLUSTER_NAME | awk -F "<span>|</span>" '{print $4}' && sleep 60
 ```
 
-The default TTL is for 60 seconds, and you have 50% chance to have blue or green cluster, then you may need to replay the previous command several times to have an idea of the repartition., which theorically is 50%
+The default TTL is for 60 seconds, and you have 50% chance to have blue or green cluster, then you may need to replay the previous command several times to have an idea of the repartition, which theorically is 50%
 
-3. Now that we see that our green cluster is taking requests correctly, we can update the eks-blue cluster configuration to but the weight to 0 and apply again. after a few moment, your route53 records should look like the below screen shot, and all request should now reach eks-green cluster.
+3. Now that we see that our green cluster is taking requests correctly, we can update the eks-blue cluster configuration to have the weight to 0 and apply again. after a few moment, your route53 records should look like the below screenshot, and all requests should now reach eks-green cluster.
 
 <p align="center">
   <img src="static/burnham-records3.png"/>
@@ -283,10 +274,9 @@ The default TTL is for 60 seconds, and you have 50% chance to have blue or green
   <img src="static/archi-green.png"/>
 </p>
 
-At this step, you can either, delete the eks-blue cluster, all the traffic is now coming on the eks-green cluster.
-You can also decide to make upgrades on the green cluster and send back traffic on eks-blue...
+At this step, all the traffic is now coming on the eks-green cluster. You can either, delete the eks-blue cluster, or decide to make upgrades on the green cluster and send back traffic on eks-blue afterward, or simply keep it as possibility of rollback if needed.
 
-In this example, we uses a simple terraform variable to control the weight for 1 application, we couls also use 1 var to controll weight for all applications deployed in the cluster, or we can also choose to have several parameters, let's say one per application, so you can finer control your migration strategy application by application.
+In this example, we uses a simple terraform variable to control the weight for 1 application, we could also use 1 var to controll weight for all applications deployed in the cluster, or we can also choose to have several parameters, let's say one per application, so you can finer control your migration strategy application by application.
 
 ## Delete the Stack
 
@@ -296,25 +286,13 @@ In this example, we uses a simple terraform variable to control the weight for 1
 
 In order to properly destroy the Cluster, we need first to remove the ArgoCD workloads, while keeping the ArgoCD addons.
 
-Why doing this ? for instance, if we remove an ingress object, we want the associated Kubernetes add-ons like aws loa balancer controller and External DNS to freed correctly Associated AWS ressources. So If we directly ask terraform to destroy everything, we will be with some ressources that will be still exsiting in AWS.
-
-So first, we need to update our `main.tf` file and remove the workload, then apply our change:
-
-```tf
-  argocd_applications = {
-    addons    = local.addon_application      # <-- Keep this line
-    #workloads = local.workload_application  # <-- remove/comment other workloads line
-    #ecsdemo   = local.ecsdemo_application
-  }
-```
-
-then apply:
+Why doing this ? when we remove an ingress object, we want the associated Kubernetes add-ons like aws load balancer controller and External DNS to freed correctly associated AWS ressources. If we directly ask terraform to destroy everything, it can remove first theses controllers without letting them the time to remove associated aws ressources that will be still existing in AWS, preventing us to clean completely our VPC.
 
 ```bash
-terraform apply -auto-approve
+kubectl delete application workloads -n argocd
 ```
 
-Once every workload as been freed on AWS side, (this can take some times), we can then destroy our addonsand terraform ressources
+Once every workload as been freed on AWS side, (this can take some times), we can then destroy our add-ons and terraform ressources
 
 > Note: it can take time to deregister all load balancers, verify that you don't have any more AWS ressources created by EKS prior to start destroying EKS with terraform.
 
