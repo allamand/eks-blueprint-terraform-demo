@@ -42,6 +42,10 @@ locals {
     target_revision    = var.workload_repo_revision
     add_on_application = false
     values = {
+      labels = {
+        env   = local.env
+        myapp = "myvalue"
+      }
       spec = {
         source = {
           repoURL        = var.workload_repo_url
