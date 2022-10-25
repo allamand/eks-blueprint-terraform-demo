@@ -64,7 +64,11 @@ The following diagram represents the Infrastructure architecture being deployed 
 
 ## Prerequisites
 
-Before launching this solution please deploy the `core-infra` solution, which is provided in the root of this repository.
+- Before launching this solution please deploy the `core-infra` solution, which is provided in the root of this repository.
+- A public AWS Route 53 Hosted Zone that will be used to create our project hosted zone. It will be provided wviathe Terraform variable `"hosted_zone_name`
+  - Before moving to the next step, you will need to register a parent domain with AWS Route 53 (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-register.html) in case you don’t have one created yet.
+- Accessing GitOps Private git repositories with SSH access requiring an SSH key for authentication. In this example our workloads repositories are stored in GitHub, you can see in GitHub documentation on how to [connect with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
+  - The private ssh key value are supposed to be stored in AWS Secret Manager, by default in a secret named `github-blueprint-ssh-key`, but you can change it using the terraform variable `workload_repo_secret`
 
 ## Usage
 
@@ -74,14 +78,32 @@ Before launching this solution please deploy the `core-infra` solution, which is
 terraform init
 ```
 
-\*2.\*\* Review the terraform plan output, take a look at the changes that terraform will execute, and then apply them:
+**2.** Create your SSH Key in Secret Manager
+
+Retrieve the ArgoUI password
+
+```bash
+aws secretsmanager get-secret-value \
+  --secret-id github-blueprint-ssh-key \
+  --query SecretString \
+  --output text --region $AWS_REGION
+```
+Should outpur your private key
+```
+-----PLACEHOLDER OPENSSH PRIVATE KEY-----
+FAKEKEY==
+-----END OPENSSH PRIVATE KEY-----
+```
+
+
+**3.** Review the terraform plan output, take a look at the changes that terraform will exeute, and then apply them:
 
 ```shell
 terraform plan
 terraform apply
 ```
 
-**2.** Once Terraform finishes the deployment open the ArgoUI Management Console And authenticate with the secret created by the core_infra stack
+**4.** Once Terraform finishes the deployment open the ArgoUI Management Console And authenticate with the secret created by the core_infra stack
 
 Retrieve the ArgoUI password
 
@@ -100,7 +122,7 @@ echo -n "https://"; kubectl get svc -n argocd argo-cd-argocd-server -o json | jq
 
 Validate the certificate issue, and login with credentials admin / <previous password from secretsmanager>
 
-**3.** Control Access to the Burnham ingress
+**5.** Control Access to the Burnham ingress
 
 ```bash
 URL=$(echo -n "https://" ; kubectl get ing -n team-burnham burnham-ingress -o json | jq ".spec.rules[0].host" -r)
@@ -165,6 +187,7 @@ See Cleanup section in main Readme.md
 | <a name="input_vpc_tag_value"></a> [vpc\_tag\_value](#input\_vpc\_tag\_value) | The tag value of the VPC and subnets | `string` | `""` | no |
 | <a name="input_workload_repo_path"></a> [workload\_repo\_path](#input\_workload\_repo\_path) | Git repo path in workload\_repo\_url for the ArgoCD workload deployment | `string` | `"envs/dev"` | no |
 | <a name="input_workload_repo_revision"></a> [workload\_repo\_revision](#input\_workload\_repo\_revision) | Git repo revision in workload\_repo\_url for the ArgoCD workload deployment | `string` | `"main"` | no |
+| <a name="input_workload_repo_secret"></a> [workload\_repo\_secret](#input\_workload\_repo\_secret) | Secret Manager secret name for hosting Github SSH-Key to Access private repository | `string` | `"github-blueprint-ssh-key"` | no |
 | <a name="input_workload_repo_url"></a> [workload\_repo\_url](#input\_workload\_repo\_url) | Git repo URL for the ArgoCD workload deployment | `string` | `"https://github.com/aws-samples/eks-blueprints-workloads.git"` | no |
 
 ## Outputs

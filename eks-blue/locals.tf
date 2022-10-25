@@ -6,7 +6,6 @@ locals {
 
   eks_cluster_domain = "${local.core_stack_name}.${var.hosted_zone_name}" # for external-dns
 
-  # region                     = data.aws_region.current.name
   cluster_version            = "1.22"
   route53_weight             = "100"
   ecsfrontend_route53_weight = "100"
@@ -32,10 +31,11 @@ locals {
   #---------------------------------------------------------------
 
   workload_application = {
-    path               = var.workload_repo_path # <-- we could also to blue/green on the workload repo path like: envs/dev-blue / envs/dev-green
-    repo_url           = var.workload_repo_url
-    target_revision    = var.workload_repo_revision
-    add_on_application = false
+    path                = var.workload_repo_path # <-- we could also to blue/green on the workload repo path like: envs/dev-blue / envs/dev-green
+    repo_url            = var.workload_repo_url
+    target_revision     = var.workload_repo_revision
+    ssh_key_secret_name = var.workload_repo_secret
+    add_on_application  = false
     values = {
       labels = {
         env   = local.env
@@ -64,10 +64,11 @@ locals {
   #---------------------------------------------------------------
 
   ecsdemo_application = {
-    path               = "multi-repo/argo-app-of-apps/dev"
-    repo_url           = var.workload_repo_url
-    target_revision    = var.workload_repo_revision
-    add_on_application = false
+    path                = "multi-repo/argo-app-of-apps/dev"
+    repo_url            = var.workload_repo_url
+    target_revision     = var.workload_repo_revision
+    ssh_key_secret_name = var.workload_repo_secret
+    add_on_application  = false
     values = {
       spec = {
         blueprint                = "terraform"
@@ -87,6 +88,8 @@ locals {
               annotations = {
                 "alb.ingress.kubernetes.io/scheme"                = "internet-facing"
                 "alb.ingress.kubernetes.io/group.name"            = "ecsdemo"
+                "alb.ingress.kubernetes.io/listen-ports"          = "[{\\\"HTTPS\\\": 443}]"
+                "alb.ingress.kubernetes.io/ssl-redirect"          = "443"
                 "alb.ingress.kubernetes.io/target-type"           = "ip"
                 "external-dns.alpha.kubernetes.io/set-identifier" = "${local.name}"
                 "external-dns.alpha.kubernetes.io/aws-weight"     = local.ecsfrontend_route53_weight

@@ -241,7 +241,7 @@ module "kubernetes_addons" {
   argocd_applications = {
     addons    = local.addon_application
     workloads = local.workload_application
-    #ecsdemo   = local.ecsdemo_application
+    ecsdemo   = local.ecsdemo_application
   }
 
   # This example shows how to set default ArgoCD Admin Password using SecretsManager with Helm Chart set_sensitive values.
@@ -279,7 +279,6 @@ module "kubernetes_addons" {
     resolve_conflicts  = "OVERWRITE"
   }
 
-
   enable_amazon_eks_kube_proxy = true
   amazon_eks_kube_proxy_config = {
     most_recent        = true
@@ -293,7 +292,6 @@ module "kubernetes_addons" {
     kubernetes_version = local.cluster_version
     resolve_conflicts  = "OVERWRITE"
   }
-
 
   #---------------------------------------------------------------
   # ADD-ONS - You can add additional addons here
@@ -315,14 +313,7 @@ module "kubernetes_addons" {
     txtOwnerId   = local.name
     zoneIdFilter = data.aws_route53_zone.sub.zone_id # Note: this uses GitOpsBridge
     policy       = "sync"
-
-    #I'm not able to configured additional level values -> Error: Inconsistent conditional result types
-    # aws = {
-    #   zoneType        = "public"
-    #   zonesCacheDuration = "1h"
-    # }
-
-    logLevel = "debug"
+    logLevel     = "debug"
   }
 
   enable_kubecost = true

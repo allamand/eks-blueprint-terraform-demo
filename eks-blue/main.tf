@@ -265,7 +265,6 @@ module "kubernetes_addons" {
   # https://aws-ia.github.io/terraform-aws-eks-blueprints/add-ons/
   #---------------------------------------------------------------
 
-
   enable_amazon_eks_coredns = true
   amazon_eks_coredns_config = {
     most_recent        = true
@@ -279,14 +278,6 @@ module "kubernetes_addons" {
     kubernetes_version = local.cluster_version
     resolve_conflicts  = "OVERWRITE"
   }
-  # enable_self_managed_aws_ebs_csi_driver = false
-  # self_managed_aws_ebs_csi_driver_helm_config = {
-  #   set_values = [
-  #     {
-  #       name  = "node.tolerateAllTaints"
-  #       value = "true"
-  #   }]
-  # }
 
   enable_amazon_eks_kube_proxy = true
   amazon_eks_kube_proxy_config = {
@@ -295,12 +286,12 @@ module "kubernetes_addons" {
     resolve_conflicts  = "OVERWRITE"
   }
 
-  # enable_amazon_eks_vpc_cni = true
-  # amazon_eks_vpc_cni_config = {
-  #   most_recent        = true
-  #   kubernetes_version = local.cluster_version
-  #   resolve_conflicts  = "OVERWRITE"
-  # }
+  enable_amazon_eks_vpc_cni = true
+  amazon_eks_vpc_cni_config = {
+    most_recent        = true
+    kubernetes_version = local.cluster_version
+    resolve_conflicts  = "OVERWRITE"
+  }
 
   #---------------------------------------------------------------
   # ADD-ONS - You can add additional addons here
@@ -322,14 +313,7 @@ module "kubernetes_addons" {
     txtOwnerId   = local.name
     zoneIdFilter = data.aws_route53_zone.sub.zone_id # Note: this uses GitOpsBridge
     policy       = "sync"
-
-    #I'm not able to configured additional level values -> Error: Inconsistent conditional result types
-    # aws = {
-    #   zoneType        = "public"
-    #   zonesCacheDuration = "1h"
-    # }
-
-    logLevel = "debug"
+    logLevel     = "debug"
   }
 
   enable_kubecost = true
