@@ -7,6 +7,9 @@ locals {
   eks_cluster_domain = "${local.core_stack_name}.${var.hosted_zone_name}" # for external-dns
 
   cluster_version            = "1.22"
+
+  # Route 53 Ingress Weights
+  argocd_route53_weight      = "0"
   route53_weight             = "100"
   ecsfrontend_route53_weight = "100"
 
@@ -54,6 +57,7 @@ locals {
           type           = "alb"
           host           = local.eks_cluster_domain
           route53_weight = local.route53_weight # <-- You can control the weight of the route53 weighted records between clusters
+          argocd_route53_weight = local.argocd_route53_weight
         }
       }
     }

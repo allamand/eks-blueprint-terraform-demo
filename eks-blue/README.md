@@ -88,7 +88,7 @@ aws secretsmanager get-secret-value \
   --query SecretString \
   --output text --region $AWS_REGION
 ```
-Should outpur your private key
+Should output your private key
 ```
 -----PLACEHOLDER OPENSSH PRIVATE KEY-----
 FAKEKEY==
