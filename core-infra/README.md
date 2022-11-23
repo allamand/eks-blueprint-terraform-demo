@@ -16,7 +16,7 @@
   - [Inputs](#inputs)
   - [Outputs](#outputs-1)
 
-This folder contains the Terraform code to deploy the core infratructure for our EKS Cluster Blue and EKS Cluster Green. The AWS resources created by the script are:
+This folder contains the Terraform code to deploy the core infratructure for our EKS Cluster **Blue** and **Green**. The AWS resources created by the script are:
 
 - Networking
   - VPC
@@ -25,18 +25,21 @@ This folder contains the Terraform code to deploy the core infratructure for our
     - 1 NAT Gateway
     - 1 Internet Gateway
     - Associated Route Tables
-- 1 Hosted zone to use for our clusters `${core_stack_name}.${hosted_zone_name}`
+- 1 Hosted zone to use for our clusters with name `${core_stack_name}.${hosted_zone_name}`
 - 1 wildcard certificat for TLS terminaison associated to our new HostedZone `*.${core_stack_name}.${hosted_zone_name}`
+- 1 SecretManager password used to access ArgoCD UI in both EKS clusters.
 
 ## Getting Started
 
-Make sure you have all the [prerequisites](../README.md) for your laptop.
+Make sure you have all the [prerequisites](../README.md#prerequisites) for your laptop.
+
+<!-->
 
 Fork this repository and [create the GitHub token granting access](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token) to this new repository in your account. Store this secret in AWS secrets manager using the aws cli.
+-->
 
 ## Usage
 
-- Clone the forked repository from your account (not the one from the aws-ia organization) and change the directory to the appropriate one as shown below:
 
 ```bash
 cd core-infra/
@@ -48,16 +51,17 @@ cd core-infra/
 terraform init
 ```
 
-- Copy the `terraform.tfvars.example` to `terraform.tfvars` and change as needed especially note the region.
-
-```shell
-cp terraform.tfvars.example terraform.tfvars
-```
+> Note: We share
 
 - Review the terraform plan output, take a look at the changes that terraform will execute, and then apply them:
 
 ```shell
 terraform plan
+```
+
+> There can be somme Warnings due to not declare variables. This is normal and you can ignore thems as we share the same `terraform.tfvars` for the 3 projects by using symlinks for a uniq file, and we declare some variables used for the eks-blue and eks-green directory
+
+```shell
 terraform apply --auto-approve
 ```
 
@@ -65,11 +69,25 @@ terraform apply --auto-approve
 
 After the execution of the Terraform code you will get an output with needed IDs and values needed as input for the nexts Terraform applies.
 
-You can use this infrastructure to run other example blueprints and create our EKS Blue and Green clusters
+```shell
+terraform output
+```
+
+Example:
+
+```
+aws_acm_certificate_status = "ISSUED"
+aws_route53_zone = "eks-blueprint.eks.mydomain.org"
+vpc_id = "vpc-0d649baf641a8071e"
+```
+
+We are going to use this core infrastructure to host the EKS Blue and Green clusters.
 
 ## Cleanup
 
-Run the following command if you want to delete all the resources created before. If you have created other blueprints and they use these infrastructure then destroy those blueprint resources first.
+Run the following command if you want to delete all the resources created before.
+
+> If you have created EKS blueprints clusters, you'll need to clean thoses ressources first.
 
 ```shell
 terraform destroy

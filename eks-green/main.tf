@@ -304,7 +304,8 @@ module "kubernetes_addons" {
   enable_vpa                          = true
   enable_aws_load_balancer_controller = true
   enable_karpenter                    = true
-  enable_aws_for_fluentbit            = false
+  enable_aws_for_fluentbit            = true
+  enable_aws_cloudwatch_metrics       = true
 
   #to view the result : terraform state show 'module.kubernetes_addons.module.external_dns[0].module.helm_addon.helm_release.addon[0]'
   enable_external_dns = true
