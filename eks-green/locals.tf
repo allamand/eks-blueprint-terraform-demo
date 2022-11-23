@@ -6,12 +6,12 @@ locals {
 
   eks_cluster_domain = "${local.core_stack_name}.${var.hosted_zone_name}" # for external-dns
 
-  cluster_version = "1.23"
+  cluster_version = "1.24"
 
   # Route 53 Ingress Weights
-  argocd_route53_weight      = "100"
-  route53_weight             = "100"
-  ecsfrontend_route53_weight = "100"
+  argocd_route53_weight      = "0"
+  route53_weight             = "0"
+  ecsfrontend_route53_weight = "0"
 
   tag_val_vpc            = var.vpc_tag_value == "" ? var.core_stack_name : var.vpc_tag_value
   tag_val_private_subnet = var.vpc_tag_value == "" ? "${var.core_stack_name}-private-" : var.vpc_tag_value
