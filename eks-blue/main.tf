@@ -62,7 +62,7 @@ data "aws_secretsmanager_secret_version" "admin_password_version" {
 }
 
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.12.2"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.17.0"
 
   cluster_name = local.name
 
@@ -226,8 +226,8 @@ module "eks_blueprints" {
 #certificate_arn = aws_acm_certificate_validation.example.certificate_arn
 
 module "kubernetes_addons" {
-  #source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.8.0/modules/kubernetes-addons"
-  source             = "github.com/allamand/terraform-aws-eks-blueprints?ref=external-dns-argo-values/modules/kubernetes-addons"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.17.0/modules/kubernetes-addons"
+  #source             = "github.com/allamand/terraform-aws-eks-blueprints?ref=external-dns-argo-values/modules/kubernetes-addons"
   eks_cluster_id     = module.eks_blueprints.eks_cluster_id
   eks_cluster_domain = local.eks_cluster_domain
 

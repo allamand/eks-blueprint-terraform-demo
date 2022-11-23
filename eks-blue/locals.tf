@@ -6,10 +6,10 @@ locals {
 
   eks_cluster_domain = "${local.core_stack_name}.${var.hosted_zone_name}" # for external-dns
 
-  cluster_version            = "1.22"
+  cluster_version = "1.23"
 
   # Route 53 Ingress Weights
-  argocd_route53_weight      = "0"
+  argocd_route53_weight      = "100"
   route53_weight             = "100"
   ecsfrontend_route53_weight = "100"
 
@@ -24,9 +24,10 @@ locals {
   #---------------------------------------------------------------
 
   addon_application = {
-    path               = "chart"
-    repo_url           = var.addons_repo_url
-    add_on_application = true
+    path                = "chart"
+    repo_url            = var.addons_repo_url
+    ssh_key_secret_name = var.workload_repo_secret
+    add_on_application  = true
   }
 
   #---------------------------------------------------------------
@@ -54,9 +55,9 @@ locals {
         karpenterInstanceProfile = "${local.name}-${local.node_group_name}"
         env                      = local.env
         ingress = {
-          type           = "alb"
-          host           = local.eks_cluster_domain
-          route53_weight = local.route53_weight # <-- You can control the weight of the route53 weighted records between clusters
+          type                  = "alb"
+          host                  = local.eks_cluster_domain
+          route53_weight        = local.route53_weight # <-- You can control the weight of the route53 weighted records between clusters
           argocd_route53_weight = local.argocd_route53_weight
         }
       }
@@ -81,7 +82,9 @@ locals {
 
         apps = {
           ecsdemoFrontend : {
-            replicaCount = "3"
+            repoURL        = "https://github.com/aws-containers/ecsdemo-frontend"
+            targetRevision = "main"
+            replicaCount   = "3"
             image = {
               repository = "public.ecr.aws/seb-demo/ecsdemo-frontend"
               tag        = "latest"

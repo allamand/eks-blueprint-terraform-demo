@@ -9,3 +9,5 @@ terraform.tfvars
 curl
 eks-nodomain
 output
+core-infra-us-east-2
+eks-pink
