@@ -62,7 +62,7 @@ data "aws_secretsmanager_secret_version" "admin_password_version" {
 }
 
 module "eks_blueprints" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.17.0"
+  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.18.1"
 
   cluster_name = local.name
 
@@ -226,8 +226,7 @@ module "eks_blueprints" {
 #certificate_arn = aws_acm_certificate_validation.example.certificate_arn
 
 module "kubernetes_addons" {
-  source = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.17.0/modules/kubernetes-addons"
-  #source             = "github.com/allamand/terraform-aws-eks-blueprints?ref=external-dns-argo-values/modules/kubernetes-addons"
+  source             = "github.com/aws-ia/terraform-aws-eks-blueprints?ref=v4.18.1/modules/kubernetes-addons"
   eks_cluster_id     = module.eks_blueprints.eks_cluster_id
   eks_cluster_domain = local.eks_cluster_domain
 
@@ -304,6 +303,7 @@ module "kubernetes_addons" {
   enable_karpenter                    = true
   enable_aws_for_fluentbit            = true
   enable_aws_cloudwatch_metrics       = true
+
   #to view the result : terraform state show 'module.kubernetes_addons.module.external_dns[0].module.helm_addon.helm_release.addon[0]'
   enable_external_dns = true
 

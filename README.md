@@ -63,7 +63,9 @@ Our objective here is to show you how Application teams and Platform teams can c
 - For working with this repository, you will need an existing [Amazon Route 53](https://docs.aws.amazon.com/route53/index.html) Hosted Zone that will be used to create our project hosted zone. It will be provided via the Terraform variable `hosted_zone_name` defined in [terraform.tfvars.example](terraform.tfvars.example).
   - Before moving to the next step, you will need to register a parent domain with AWS Route 53 (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-register.html) in case you don’t have one created yet.
 - Accessing GitOps git repositories with SSH access requiring an SSH key for authentication. In this example our workloads repositories are stored in GitHub, you can see in GitHub documentation on how to [connect with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
-  - Your GitHub private ssh key value is supposed to be stored in AWS Secret Manager, by default in a secret named `github-blueprint-ssh-key`, but you can change it using the terraform variable `workload_repo_secret` in [terraform.tfvars.example](terraform.tfvars.example).
+  - Your GitHub private ssh key value is supposed to be stored in plain text in AWS Secret Manager in a secret named `github-blueprint-ssh-key`, but you can change it using the terraform variable `workload_repo_secret` in [terraform.tfvars.example](terraform.tfvars.example).
+  - ![](static/github-ssh-secret.png | width=50)
+
 ## Quick Start
 
 ### Configure the Stacks
@@ -94,8 +96,9 @@ terraform init
 terraform apply
 ```
 
-### Create the Blue cluster
+> There can be somme Warnings due to not declare variables. This is normal and you can ignore thems as we share the same `terraform.tfvars` for the 3 projects by using symlinks for a uniq file, and we declare some variables used for the eks-blue and eks-green directory
 
+### Create the Blue cluster
 
 More info in the eks-blue [Readme](eks-blue/README.md)
 
@@ -105,7 +108,7 @@ terraform init
 terraform apply
 ```
 
-> This can take 8mn for EKS cluster,  15mn
+> This can take 8mn for EKS cluster, 15mn
 
 ### Create the Green cluster
 
@@ -118,6 +121,7 @@ terraform apply
 By default the only differences in the 2 clusters are the values defined in `locals.tf`. We will change thoses values to upgrade Kubernetes version of new cluster, and to migrate our stateless workloads between clusters.
 
 ## How this works
+
 ### Watch our Workload: we focus on team-burnham namespace.
 
 Our clusters are configured with existing ArgoCD Github repository that is synchronized into each of the clusters:
@@ -147,7 +151,7 @@ We have set up a [simple go application](https://github.com/allamand/eks-example
 </div>
 ```
 
-The application is deployed from our [<burnham> workload repository manifest](https://github.com/seb-tmp/eks-blueprints-workloads/blob/blue-green-demo/teams/team-burnham/dev/templates/burnham.yaml)
+The application is deployed from our [<burnham> workload repository manifest](https://github.com/aws-samples/eks-blueprints-workloads/blob/main/teams/team-burnham/dev/templates/burnham.yaml)
 
 See the deployment
 
@@ -187,7 +191,7 @@ eks-blueprint-blue
 
 We have configured both our clusters to configure the same [Amazon Route 53](https://aws.amazon.com/fr/route53/) Hosted Zones. This is done by having the same configuration of [ExternalDNS](https://github.com/kubernetes-sigs/external-dns) add-on in `main.tf`:
 
-This is the Terraform configuration to configure the  ExternalDNS Add-on which is deployed by the Blueprint using ArgoCD.
+This is the Terraform configuration to configure the ExternalDNS Add-on which is deployed by the Blueprint using ArgoCD.
 
 ```
   enable_external_dns = true
@@ -257,6 +261,7 @@ curl -s $URL | grep CLUSTER_NAME | awk -F "<span>|</span>" '{print $4}'
 ```
 
 you should see:
+
 ```
 eks-blueprint-blue
 ```
@@ -281,6 +286,7 @@ repeat 10 curl -s $URL | grep CLUSTER_NAME | awk -F "<span>|</span>" '{print $4}
 ```
 
 Result should be similar to:
+
 ```
 eks-demo1-blue
 eks-demo1-blue
@@ -321,11 +327,13 @@ In order to properly destroy the Cluster, we need first to remove the ArgoCD wor
 Why doing this ? when we remove an ingress object, we want the associated Kubernetes add-ons like aws load balancer controller and External DNS to freed correctly associated AWS ressources. If we directly ask terraform to destroy everything, it can remove first theses controllers without letting them the time to remove associated aws ressources that will be still existing in AWS, preventing us to clean completely our VPC.
 
 1. Delete Workloads App of App
+
 ```bash
 kubectl delete application workloads -n argocd
 ```
 
 2. If also deployed, delete ecsdemo App of App
+
 ```bash
 kubectl delete application ecsdemo -n argocd
 ```
@@ -413,4 +421,4 @@ aws secretsmanager get-secret-value \
   --secret-id argocd-admin-secret.eks-blueprint \
   --query SecretString \
   --output text --region $AWS_REGION
-```  
+```
