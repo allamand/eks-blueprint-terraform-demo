@@ -64,7 +64,7 @@ Our objective here is to show you how Application teams and Platform teams can c
   - Before moving to the next step, you will need to register a parent domain with AWS Route 53 (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-register.html) in case you don’t have one created yet.
 - Accessing GitOps git repositories with SSH access requiring an SSH key for authentication. In this example our workloads repositories are stored in GitHub, you can see in GitHub documentation on how to [connect with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
   - Your GitHub private ssh key value is supposed to be stored in plain text in AWS Secret Manager in a secret named `github-blueprint-ssh-key`, but you can change it using the terraform variable `workload_repo_secret` in [terraform.tfvars.example](terraform.tfvars.example).
-  - ![](static/github-ssh-secret.png | width=50)
+  - <img src="static/github-ssh-secret.png" width=50%>
 
 ## Quick Start
 
