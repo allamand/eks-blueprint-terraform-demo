@@ -81,7 +81,7 @@ locals {
         karpenterInstanceProfile = "${local.name}-${local.node_group_name}"
 
         apps = {
-          ecsdemoFrontend : {
+          ecsdemoFrontend = {
             repoURL        = "https://github.com/aws-containers/ecsdemo-frontend"
             targetRevision = "main"
             replicaCount   = "3"
@@ -90,8 +90,8 @@ locals {
               tag        = "latest"
             }
             ingress = {
-              enabled : "true"
-              className : "alb"
+              enabled = "true"
+              className = "alb"
               annotations = {
                 "alb.ingress.kubernetes.io/scheme"                = "internet-facing"
                 "alb.ingress.kubernetes.io/group.name"            = "ecsdemo"
@@ -115,14 +115,42 @@ locals {
             }
             resources = {
               requests = {
-                cpu = "200m"
-                memory : "256Mi"
+                cpu = "1"
+                memory = "256Mi"
               }
               limits = {
-                cpu    = "400m"
+                cpu    = "1"
                 memory = "512Mi"
               }
             }
+            autoscaling = {
+              enabled = "true"
+              minReplicas = "3"
+              maxReplicas = "100"
+              targetCPUUtilizationPercentage = "60"
+            }
+            nodeSelector=  {
+              "karpenter.sh/provisioner-name" = "burnham"
+            }
+            tolerations=  [
+              {
+                key =  "burnham"
+                operator = "Exists"
+                effect = "NoSchedule"
+              }
+            ]
+            topologySpreadConstraints = [
+              {
+                maxSkew = 1
+                topologyKey = "topology.kubernetes.io/zone"
+                whenUnsatisfiable = "DoNotSchedule"
+                labelSelector= {
+                  matchLabels = {
+                      "app.kubernetes.io/name" =  "ecsdemo-frontend"
+                  }
+                }            
+              }
+            ]
           }
         }
       }

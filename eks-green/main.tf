@@ -164,13 +164,13 @@ module "eks_blueprints" {
       }
       #don't use quotas here cause ecsdemo app does not have request/limits
       "quota" = {
-        "requests.cpu"    = "10000m",
+        "requests.cpu"    = "100",
         "requests.memory" = "20Gi",
-        "limits.cpu"      = "20000m",
+        "limits.cpu"      = "200",
         "limits.memory"   = "50Gi",
-        "pods"            = "10",
+        "pods"            = "100",
         "secrets"         = "10",
-        "services"        = "10"
+        "services"        = "20"
       }
       ## Manifests Example: we can specify a directory with kubernetes manifests that can be automatically applied in the team-riker namespace.
       manifests_dir = "./kubernetes/ecsdemo-frontend/"
@@ -314,6 +314,6 @@ module "kubernetes_addons" {
     logLevel     = "debug"
   }
 
-  enable_kubecost = true
+  enable_kubecost = false
 
 }
