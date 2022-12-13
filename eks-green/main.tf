@@ -314,6 +314,6 @@ module "kubernetes_addons" {
     logLevel     = "debug"
   }
 
-  enable_kubecost = false
+  enable_kubecost = true
 
 }

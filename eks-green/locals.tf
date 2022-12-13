@@ -90,7 +90,7 @@ locals {
               tag        = "latest"
             }
             ingress = {
-              enabled = "true"
+              enabled   = "true"
               className = "alb"
               annotations = {
                 "alb.ingress.kubernetes.io/scheme"                = "internet-facing"
@@ -115,7 +115,7 @@ locals {
             }
             resources = {
               requests = {
-                cpu = "1"
+                cpu    = "1"
                 memory = "256Mi"
               }
               limits = {
@@ -124,31 +124,31 @@ locals {
               }
             }
             autoscaling = {
-              enabled = "true"
-              minReplicas = "3"
-              maxReplicas = "100"
+              enabled                        = "true"
+              minReplicas                    = "3"
+              maxReplicas                    = "100"
               targetCPUUtilizationPercentage = "60"
             }
-            nodeSelector=  {
+            nodeSelector = {
               "karpenter.sh/provisioner-name" = "burnham"
             }
-            tolerations=  [
+            tolerations = [
               {
-                key =  "burnham"
+                key      = "burnham"
                 operator = "Exists"
-                effect = "NoSchedule"
+                effect   = "NoSchedule"
               }
             ]
             topologySpreadConstraints = [
               {
-                maxSkew = 1
-                topologyKey = "topology.kubernetes.io/zone"
+                maxSkew           = 1
+                topologyKey       = "topology.kubernetes.io/zone"
                 whenUnsatisfiable = "DoNotSchedule"
-                labelSelector= {
+                labelSelector = {
                   matchLabels = {
-                      "app.kubernetes.io/name" =  "ecsdemo-frontend"
+                    "app.kubernetes.io/name" = "ecsdemo-frontend"
                   }
-                }            
+                }
               }
             ]
           }
